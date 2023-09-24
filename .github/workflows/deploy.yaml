@@ -32,7 +32,7 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws configure set default.region ${{ secrets.AWS_REGION }}
           
-      - name: Create ECR repository
+      - name: Create ECR repositoryss
         run: |
           aws ecr create-repository --repository-name my-node-app
 
