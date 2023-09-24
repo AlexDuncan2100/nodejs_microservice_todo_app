@@ -27,11 +27,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # - name: Build Docker images
-      #   run: |
-      #     docker build -t my-node-app:latest .
-      #     docker tag my-node-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-node-app:latest
-
       - name: Configure AWS CLI
         run: |
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
@@ -56,7 +51,7 @@ jobs:
       
       - name: Build App Docker Image
         run: | 
-          docker build -t "$ECR_REGISTRY/$APP_REPO_NAME:latest" -f .    
+          docker build -t "$ECR_REGISTRY/$APP_REPO_NAME:latest" -f ./Dockerfile .    
       
       
       - name: Push Image to ECR Repo
