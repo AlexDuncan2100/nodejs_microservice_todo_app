@@ -7,7 +7,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  APP_REPO_NAME: nodejs-todo-app
+  APP_REPO_NAME: nodejs-todo-appn
   APP_NAME: nodetodo
   ECR_REGISTRY: 046402772087.dkr.ecr.us-east-1.amazonaws.com
 
