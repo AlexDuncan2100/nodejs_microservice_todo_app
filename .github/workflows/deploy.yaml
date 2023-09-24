@@ -3,10 +3,10 @@ name: Dockerize and Deploy to ECR
 on:
   push:
     branches:
-      - main # Hangi dalda değişiklik olduğunda bu işlemi çalıştıracağınızı belirtin
+      - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,10 +16,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 14 # Node.js sürümünü istediğiniz sürümle değiştirin
+          node-version: 14
 
       - name: Install dependencies
-        run: npm install # Node.js bağımlılıklarını yükleyin
+        run: npm install
 
       - name: Build Docker image
         run: |
@@ -33,6 +33,11 @@ jobs:
           aws configure set default.region ${{ secrets.AWS_REGION }}
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
+      - name: Create ECR repository
+        run: |
+          aws ecr create-repository --repository-name my-node-app
+
       - name: Push Docker image to ECR
         run: docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-node-app:latest
+
 
