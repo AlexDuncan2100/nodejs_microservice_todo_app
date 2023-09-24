@@ -5,6 +5,12 @@ on:
     branches:
       - main
 
+env:
+  AWS_REGION: us-east-1
+  APP_REPO_NAME: nodejs-todo-app
+  APP_NAME: nodetodo
+  ECR_REGISTRY: 046402772087.dkr.ecr.us-east-1.amazonaws.com
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -21,26 +27,44 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build Docker images
-        run: |
-          docker build -t my-node-app:latest .
-          docker tag my-node-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-node-app:latest
+      # - name: Build Docker images
+      #   run: |
+      #     docker build -t my-node-app:latest .
+      #     docker tag my-node-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-node-app:latest
 
-      - name: setup cli permission
+      - name: Configure AWS CLI
         run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set default.region ${{ secrets.AWS_REGION }}
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+        shell: bash
+
+
+      - name: Set AWS Region
+        run: |
+          aws configure set aws_region ${{ env.AWS_REGION }}
+
+
+      - name: Create ECR Repo
+        run: |
+          echo 'Creating ECR Repo for App'
+          aws ecr create-repository \
+            --repository-name ${{ env.APP_REPO_NAME }} \
+            --image-scanning-configuration scanOnPush=false \
+            --image-tag-mutability MUTABLE \
+            --region ${{ env.AWS_REGION }}
           
-      - name: Create ECR repositoryss
+      
+      - name: Build App Docker Image
+        run: | 
+          docker build -t "$ECR_REGISTRY/$APP_REPO_NAME:latest" -f .    
+      
+      
+      - name: Push Image to ECR Repo
         run: |
-          aws ecr create-repository --repository-name my-node-app
+          echo 'Pushing App Image to ECR Repo'
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+          docker push "$ECR_REGISTRY/$APP_REPO_NAME:latest"
 
-      - name: Log in to Amazon ECR
-        run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-      - name: Push Docker image to ECR
-        run: docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-node-app:latest
 
 
